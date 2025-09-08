@@ -145,9 +145,16 @@
     periodInput.addEventListener('change', function () {
       if (unitSelect.value !== 'week' || !this.value) return;
       const dt = new Date(this.value);
-      const dow = dt.getDay();
+      const dow = dt.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
+      
       if (dow !== 6) { // not Saturday
-        const daysUntilSaturday = (6 - dow + 7) % 7 || 7;
+        let daysUntilSaturday;
+        if (dow === 0) { // Sunday
+          daysUntilSaturday = 6; // Move to Saturday of the same week
+        } else { // Monday to Friday
+          daysUntilSaturday = 6 - dow; // Move to Saturday of the same week
+        }
+        
         dt.setDate(dt.getDate() + daysUntilSaturday);
         const y = dt.getFullYear();
         const m = String(dt.getMonth() + 1).padStart(2, '0');
