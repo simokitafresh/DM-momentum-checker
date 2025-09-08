@@ -232,6 +232,7 @@ def find_common_anchors(
                 break
 
     else:  # day
+        # 営業日ベースでn営業日前を計算
         if current_idx >= n:
             past_anchor = common_dates[current_idx - n]
         else:
