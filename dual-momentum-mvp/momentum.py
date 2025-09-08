@@ -215,17 +215,21 @@ def find_common_anchors(
 
     elif unit == "week":
         current_dt = datetime.strptime(current_anchor, "%Y-%m-%d")
-        target_saturday = current_dt - timedelta(weeks=n)
-        target_friday = target_saturday - timedelta(days=1)
+        
+        # 現在の週の土曜日を特定
+        current_saturday = round_to_saturday(current_dt)
+        
+        # n週間前の土曜日を計算
+        past_week_saturday = current_saturday - timedelta(weeks=n)
+        past_week_start = past_week_saturday - timedelta(days=6)  # その週の日曜日
 
+        # その週の範囲内で最も遅い（最後の）営業日を探す
         past_anchor = None
-        min_diff = float("inf")
-        for d in common_dates[:current_idx]:
+        for d in reversed(common_dates[:current_idx]):
             d_obj = datetime.strptime(d, "%Y-%m-%d")
-            diff = abs((d_obj - target_friday).days)
-            if diff < min_diff and diff <= 7:
-                min_diff = diff
+            if past_week_start <= d_obj <= past_week_saturday:
                 past_anchor = d
+                break
 
     else:  # day
         if current_idx >= n:
