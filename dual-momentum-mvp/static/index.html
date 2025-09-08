@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>デュアル・モメンタム計算 MVP</title>
+  <style>
+    body { font-family: monospace; max-width: 900px; margin: 24px auto; padding: 16px; }
+    h1 { font-size: 20px; }
+    form { display: grid; gap: 12px; }
+    .row { display: grid; gap: 8px; grid-template-columns: 160px 1fr; align-items: center; }
+    label { font-weight: bold; }
+    input, select, button { padding: 8px; font-family: inherit; }
+    .tickers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .hint { color: #666; font-size: 12px; }
+    .error { color: #c00; }
+    #results { margin-top: 16px; white-space: pre-wrap; }
+    .anchors { margin-top: 8px; font-size: 12px; color: #555; }
+  </style>
+  <link rel="icon" href="data:," />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <script>
+    // Helper to escape HTML safely
+    function esc(str) {
+      return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s]));
+    }
+  </script>
+  <style>
+    /* Make Saturday auto-adjust hint noticeable */
+    .notice { color: #06c; }
+  </style>
+  <!-- no external resources to keep it single-file -->
+</head>
+<body>
+  <h1>デュアル・モメンタム計算</h1>
+
+  <form id="momentum-form">
+    <div class="row">
+      <label>Tickers (最大5)</label>
+      <div class="tickers">
+        <input class="ticker-input" placeholder="AAPL" />
+        <input class="ticker-input" placeholder="MSFT" />
+        <input class="ticker-input" placeholder="GOOGL" />
+        <input class="ticker-input" placeholder="AMZN" />
+        <input class="ticker-input" placeholder="TSLA" />
+      </div>
+    </div>
+
+    <div class="row">
+      <label for="unit">Unit</label>
+      <select id="unit">
+        <option value="month">month</option>
+        <option value="week">week</option>
+        <option value="day">day</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <label for="n">N (期間数)</label>
+      <input id="n" type="number" min="1" value="3" />
+    </div>
+
+    <div class="row">
+      <label for="as_of_period">基準期</label>
+      <div>
+        <input id="as_of_period" type="month" placeholder="YYYY-MM" required />
+        <div id="period-hint" class="hint">例: 2025-09</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div></div>
+      <button type="submit">計算</button>
+    </div>
+  </form>
+
+  <div id="results"></div>
+
+  <script>
+    const form = document.getElementById('momentum-form');
+    const unitSelect = document.getElementById('unit');
+    const periodInput = document.getElementById('as_of_period');
+    const periodHint = document.getElementById('period-hint');
+    const resultsDiv = document.getElementById('results');
+
+    // Update fields by unit
+    function updateUnitUI() {
+      const unit = unitSelect.value;
+      if (unit === 'month') {
+        periodInput.type = 'month';
+        periodInput.placeholder = 'YYYY-MM';
+        periodHint.textContent = '例: 2025-09';
+      } else if (unit === 'week') {
+        periodInput.type = 'date';
+        periodInput.placeholder = 'YYYY-MM-DD (土曜)';
+        periodInput.step = '7';
+        periodHint.textContent = '週は土曜日に丸められます';
+      } else { // day
+        periodInput.type = 'date';
+        periodInput.placeholder = 'YYYY-MM-DD';
+        periodInput.step = '1';
+        periodHint.textContent = '例: 2025-09-08';
+      }
+    }
+    unitSelect.addEventListener('change', updateUnitUI);
+    updateUnitUI();
+
+    // Auto-adjust to Saturday when unit=week
+    periodInput.addEventListener('change', function () {
+      if (unitSelect.value !== 'week' || !this.value) return;
+      const dt = new Date(this.value);
+      const dow = dt.getDay();
+      if (dow !== 6) { // not Saturday
+        const daysUntilSaturday = (6 - dow + 7) % 7 || 7;
+        dt.setDate(dt.getDate() + daysUntilSaturday);
+        const y = dt.getFullYear();
+        const m = String(dt.getMonth() + 1).padStart(2, '0');
+        const d = String(dt.getDate()).padStart(2, '0');
+        this.value = `${y}-${m}-${d}`;
+        periodHint.textContent = '週の基準日は土曜日に自動調整されました';
+        periodHint.classList.add('notice');
+        setTimeout(() => {
+          periodHint.textContent = '週は土曜日に丸められます';
+          periodHint.classList.remove('notice');
+        }, 2000);
+      }
+    });
+
+    // Submit handler
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      resultsDiv.textContent = '';
+
+      const tickers = Array.from(document.querySelectorAll('.ticker-input'))
+        .map(i => i.value.trim().toUpperCase())
+        .filter(Boolean);
+      if (tickers.length === 0) {
+        resultsDiv.innerHTML = '<span class="error">エラー: チッカーを1つ以上入力してください</span>';
+        return;
+      }
+
+      const unit = unitSelect.value;
+      const n = parseInt(document.getElementById('n').value, 10);
+      const asOf = periodInput.value;
+
+      const payload = { tickers, unit, n, as_of_period: asOf };
+
+      resultsDiv.textContent = '計算中...';
+      try {
+        const res = await fetch('/compute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        // Pretty render
+        const lines = [];
+        lines.push('Results:');
+        lines.push(JSON.stringify(data.results, null, 2));
+        lines.push('');
+        lines.push('Anchors:');
+        lines.push(JSON.stringify(data.anchors, null, 2));
+        lines.push('');
+        lines.push('Summary:');
+        lines.push(JSON.stringify(data.summary, null, 2));
+        resultsDiv.textContent = lines.join('\n');
+      } catch (err) {
+        console.error(err);
+        resultsDiv.innerHTML = '<span class="error">計算に失敗しました: ' + esc(err) + '</span>';
+      }
+    });
+  </script>
+</body>
+</html>
+
