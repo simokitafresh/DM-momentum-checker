@@ -23,7 +23,7 @@ import momentum
 class ComputeRequest(BaseModel):
     """Request body for momentum computation."""
 
-    tickers: List[str] = Field(..., max_items=5, min_items=1)
+    tickers: List[str] = Field(..., max_items=3, min_items=1)
     unit: Literal["month", "week", "day"]
     n: int = Field(..., ge=1)
     as_of_period: str  # YYYY-MM for month, YYYY-MM-DD for week/day

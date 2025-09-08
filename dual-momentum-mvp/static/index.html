@@ -11,7 +11,7 @@
     .row { display: grid; gap: 8px; grid-template-columns: 160px 1fr; align-items: center; }
     label { font-weight: bold; }
     input, select, button { padding: 8px; font-family: inherit; }
-    .tickers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .tickers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .hint { color: #666; font-size: 12px; }
     .error { color: #c00; }
     #results { margin-top: 16px; white-space: pre-wrap; }
@@ -28,13 +28,11 @@
 
   <form id="momentum-form">
     <div class="row">
-      <label>Tickers (最大5個)</label>
+      <label>Tickers (最大3個)</label>
       <div class="tickers">
         <input class="ticker-input" placeholder="AAPL" />
         <input class="ticker-input" placeholder="MSFT" />
         <input class="ticker-input" placeholder="GOOGL" />
-        <input class="ticker-input" placeholder="AMZN" />
-        <input class="ticker-input" placeholder="TSLA" />
       </div>
     </div>
 
@@ -174,6 +172,10 @@
         .filter(Boolean);
       if (tickers.length === 0) {
         resultsDiv.textContent = 'エラー: チッカーを1つ以上入力してください';
+        return;
+      }
+      if (tickers.length > 3) {
+        resultsDiv.textContent = 'エラー: チッカーは最大3個まで入力できます';
         return;
       }
 
