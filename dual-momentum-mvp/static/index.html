@@ -5,18 +5,192 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>デュアルモメンタム戦略チェッカー・MVP</title>
   <style>
-    body { font-family: monospace; max-width: 900px; margin: 24px auto; padding: 16px; }
-    h1 { font-size: 20px; }
-    form { display: grid; gap: 12px; }
-    .row { display: grid; gap: 8px; grid-template-columns: 160px 1fr; align-items: center; }
-    label { font-weight: bold; }
-    input, select, button { padding: 8px; font-family: inherit; }
-    .tickers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .hint { color: #666; font-size: 12px; }
-    .error { color: #c00; }
-    #results { margin-top: 16px; white-space: pre-wrap; }
-    .anchors { margin-top: 8px; font-size: 12px; color: #555; }
-    .notice { color: #06c; }
+    /* ベーススタイル */
+    body { 
+      font-family: monospace; 
+      max-width: 900px; 
+      margin: 24px auto; 
+      padding: 16px; 
+      box-sizing: border-box;
+    }
+    
+    h1 { 
+      font-size: 20px; 
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    
+    form { 
+      display: grid; 
+      gap: 12px; 
+    }
+    
+    .row { 
+      display: grid; 
+      gap: 8px; 
+      grid-template-columns: 160px 1fr; 
+      align-items: start; 
+    }
+    
+    label { 
+      font-weight: bold;
+      padding-top: 8px; /* inputの高さに合わせて調整 */
+    }
+    
+    input, select, button { 
+      padding: 8px; 
+      font-family: inherit; 
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    
+    button {
+      background-color: #007acc;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    button:hover {
+      background-color: #005a9e;
+    }
+    
+    .tickers { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+      gap: 8px; 
+    }
+    
+    .hint { 
+      color: #666; 
+      font-size: 12px; 
+      margin-top: 4px;
+    }
+    
+    .error { 
+      color: #c00; 
+    }
+    
+    #results { 
+      margin-top: 16px; 
+      white-space: pre-wrap; 
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 12px;
+      font-family: monospace;
+      min-height: 60px;
+    }
+    
+    .anchors { 
+      margin-top: 8px; 
+      font-size: 12px; 
+      color: #555; 
+    }
+    
+    .notice { 
+      color: #06c; 
+      font-weight: bold;
+    }
+
+    /* タブレット対応 (768px以下) */
+    @media (max-width: 768px) {
+      body {
+        margin: 16px auto;
+        padding: 12px;
+      }
+      
+      h1 {
+        font-size: 18px;
+        margin-bottom: 20px;
+      }
+      
+      .row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+      
+      label {
+        padding-top: 0;
+        margin-bottom: 4px;
+      }
+      
+      .tickers {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 6px;
+      }
+      
+      input, select, button {
+        padding: 10px;
+        font-size: 16px; /* iOS Safariでのzoom防止 */
+      }
+      
+      #results {
+        font-size: 14px;
+        padding: 10px;
+      }
+    }
+
+    /* スマートフォン対応 (480px以下) */
+    @media (max-width: 480px) {
+      body {
+        margin: 8px auto;
+        padding: 8px;
+      }
+      
+      h1 {
+        font-size: 16px;
+        margin-bottom: 16px;
+      }
+      
+      .tickers {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      
+      input, select, button {
+        padding: 12px;
+        font-size: 16px;
+      }
+      
+      button {
+        padding: 14px;
+        font-size: 16px;
+        font-weight: bold;
+      }
+      
+      #results {
+        font-size: 13px;
+        padding: 8px;
+        line-height: 1.4;
+      }
+      
+      .hint {
+        font-size: 11px;
+      }
+    }
+
+    /* 超小画面対応 (360px以下) */
+    @media (max-width: 360px) {
+      body {
+        margin: 4px auto;
+        padding: 6px;
+      }
+      
+      h1 {
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+      
+      form {
+        gap: 10px;
+      }
+      
+      .row {
+        gap: 4px;
+      }
+    }
   </style>
   <link rel="icon" href="data:," />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
