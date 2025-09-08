@@ -52,11 +52,34 @@ def fetch_prices(symbols: List[str], from_date: str, to_date: str) -> Dict[str, 
         data = response.json()
 
         result: Dict[str, List[dict]] = {}
-        for ticker, prices in data.items():
-            if prices:
-                result[ticker] = [{"date": p["date"], "close": p["close"]} for p in prices]
-            else:
-                result[ticker] = []
+
+        if isinstance(data, dict):
+            # Shape: {"AAPL": [{...}, ...], "MSFT": [...], ...}
+            for ticker, prices in data.items():
+                if prices:
+                    result[ticker] = [{"date": p["date"], "close": p["close"]} for p in prices]
+                else:
+                    result[ticker] = []
+        elif isinstance(data, list):
+            # Shape: [{"symbol": "AAPL", "date": "YYYY-MM-DD", "close": 123.4, ...}, ...]
+            from collections import defaultdict
+
+            tmp = defaultdict(list)
+            for row in data:
+                sym = row.get("symbol") or row.get("ticker") or row.get("Symbol")
+                d = row.get("date") or row.get("Date")
+                c = row.get("close") or row.get("Close")
+                if not sym or not d or c is None:
+                    continue
+                tmp[sym].append({"date": d, "close": c})
+
+            # Sort by date ascending for consistency
+            result = {k: sorted(v, key=lambda x: x["date"]) for k, v in tmp.items()}
+        else:
+            print(
+                f"Invalid API response format: type={type(data).__name__}, symbols={symbols}, from={from_date}, to={to_date}"
+            )
+            return {}
 
         return result
 
@@ -69,4 +92,3 @@ def fetch_prices(symbols: List[str], from_date: str, to_date: str) -> Dict[str, 
     except Exception as e:  # pragma: no cover - defensive
         print(f"Unexpected error: {e}, symbols={symbols}, from={from_date}, to={to_date}")
         return {}
-
