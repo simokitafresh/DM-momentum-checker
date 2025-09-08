@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
+      <label>Tickers (最大5個)</label>head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>郢昴・ﾎ礼ｹｧ・｢郢晢ｽｫ郢晢ｽｻ郢晢ｽ｢郢晢ｽ｡郢晢ｽｳ郢ｧ・ｿ郢晢｣ｰ髫ｪ閧ｲ・ｮ繝ｻMVP</title>
+  <title>デュアルモメンタム戦略チェッカー・MVP</title>
   <style>
     body { font-family: monospace; max-width: 900px; margin: 24px auto; padding: 16px; }
     h1 { font-size: 20px; }
@@ -29,7 +29,7 @@
   <!-- no external resources to keep it single-file -->
 </head>
 <body>
-  <h1>郢昴・ﾎ礼ｹｧ・｢郢晢ｽｫ郢晢ｽｻ郢晢ｽ｢郢晢ｽ｡郢晢ｽｳ郢ｧ・ｿ郢晢｣ｰ髫ｪ閧ｲ・ｮ繝ｻ/h1>
+  <h1>デュアルモメンタム戦略チェッカー</h1>
 
   <form id="momentum-form">
     <div class="row">
@@ -53,21 +53,21 @@
     </div>
 
     <div class="row">
-      <label for="n">N (隴帶ｻ・ｿ｣隰ｨ・ｰ)</label>
+      <label for="n">N (過去期間)</label>
       <input id="n" type="number" min="1" value="3" />
     </div>
 
     <div class="row">
-      <label for="as_of_period">陜難ｽｺ雋・戟謔・/label>
+      <label for="as_of_period">基準日</label>
       <div>
         <input id="as_of_period" type="month" placeholder="YYYY-MM" required />
-        <div id="period-hint" class="hint">關薙・ 2025-09</div>
+        <div id="period-hint" class="hint">例： 2025-09</div>
       </div>
     </div>
 
     <div class="row">
       <div></div>
-      <button type="submit">髫ｪ閧ｲ・ｮ繝ｻ/button>
+      <button type="submit">チェック</button>
     </div>
   </form>
 
@@ -88,7 +88,7 @@
 
     // --- getUnitJapanese: label for unit ---
     function getUnitJapanese(unit, n) {
-      const unitMap = { month: '郢晢ｽｶ隴帙・, week: '鬨ｾ・ｱ鬮｢繝ｻ, day: '陜滂ｽｶ隶鯉ｽｭ隴鯉ｽ･' };
+      const unitMap = { month: 'ヶ月', week: '週間', day: '日間' };
       const label = unitMap[unit] ?? unit;
       return `${n}${label}`;
     }
@@ -117,11 +117,11 @@
       const current = data?.anchors?.current;
       const hasAnchors = !!past && !!current && past !== 'N/A' && current !== 'N/A';
       if (hasAnchors) {
-        lines.push(`隴帶ｻ・ｿ｣: ${unitJa} (${past} 遶翫・${current})`);
+        lines.push(`対象期間: ${unitJa} (${past} 〜 ${current})`);
       } else {
-        lines.push(`隴帶ｻ・ｿ｣: ${unitJa} (郢昴・繝ｻ郢ｧ・ｿ闕ｳ蟠趣ｽｶ・ｳ)`);
+        lines.push(`対象期間: ${unitJa} (データが不足)`);
       }
-      lines.push(`陜難ｽｺ雋・・ ${request?.as_of_period}`);
+      lines.push(`基準日: ${request?.as_of_period}`);
 
       resultsDiv.textContent = lines.join('\n');
     }
@@ -132,17 +132,17 @@
       if (unit === 'month') {
         periodInput.type = 'month';
         periodInput.placeholder = 'YYYY-MM';
-        periodHint.textContent = '關薙・ 2025-09';
+        periodHint.textContent = '例： 2025-09';
       } else if (unit === 'week') {
         periodInput.type = 'date';
-        periodInput.placeholder = 'YYYY-MM-DD (陜ｨ貊灘ｱ・';
+        periodInput.placeholder = 'YYYY-MM-DD (土曜日)';
         periodInput.step = '7';
-        periodHint.textContent = '鬨ｾ・ｱ邵ｺ・ｯ陜ｨ貊灘ｱ・ｭ鯉ｽ･邵ｺ・ｫ闕ｳ・ｸ郢ｧ竏夲ｽ臥ｹｧ蠕娯穐邵ｺ繝ｻ;
+        periodHint.textContent = '週間ベースは土曜日に設定してください';
       } else { // day
         periodInput.type = 'date';
         periodInput.placeholder = 'YYYY-MM-DD';
         periodInput.step = '1';
-        periodHint.textContent = '關薙・ 2025-09-08';
+        periodHint.textContent = '例： 2025-09-08';
       }
     }
     unitSelect.addEventListener('change', updateUnitUI);
@@ -160,10 +160,10 @@
         const m = String(dt.getMonth() + 1).padStart(2, '0');
         const d = String(dt.getDate()).padStart(2, '0');
         this.value = `${y}-${m}-${d}`;
-        periodHint.textContent = '鬨ｾ・ｱ邵ｺ・ｮ陜難ｽｺ雋・戟蠕狗ｸｺ・ｯ陜ｨ貊灘ｱ・ｭ鯉ｽ･邵ｺ・ｫ髢ｾ・ｪ陷肴・・ｪ・ｿ隰ｨ・ｴ邵ｺ霈費ｽ檎ｸｺ・ｾ邵ｺ蜉ｱ笳・;
+        periodHint.textContent = '週間ベースの基準日は土曜日に自動調整されました';
         periodHint.classList.add('notice');
         setTimeout(() => {
-          periodHint.textContent = '鬨ｾ・ｱ邵ｺ・ｯ陜ｨ貊灘ｱ・ｭ鯉ｽ･邵ｺ・ｫ闕ｳ・ｸ郢ｧ竏夲ｽ臥ｹｧ蠕娯穐邵ｺ繝ｻ;
+          periodHint.textContent = '週間ベースは土曜日に設定してください';
           periodHint.classList.remove('notice');
         }, 2000);
       }
@@ -188,7 +188,7 @@
 
       const payload = { tickers, unit, n, as_of_period: asOf };
 
-      resultsDiv.textContent = '髫ｪ閧ｲ・ｮ蠍ｺ・ｸ・ｭ...';
+      resultsDiv.textContent = 'チェック中...';
       try {
         const res = await fetch('/compute', {
           method: 'POST',
@@ -203,7 +203,7 @@
       } catch (error) {
         console.error(error);
         const msg = (error && error.message) ? error.message : String(error);
-        resultsDiv.textContent = `郢ｧ・ｨ郢晢ｽｩ郢晢ｽｼ: ${msg}`;
+        resultsDiv.textContent = `エラー: ${msg}`;
       }
     });
   </script>
