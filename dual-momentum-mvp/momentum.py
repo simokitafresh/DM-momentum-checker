@@ -85,8 +85,10 @@ def calculate_date_range(unit: str, n: int, as_of_period: str) -> Tuple[str, str
     if unit == "month":
         # as_of_period is YYYY-MM; anchor uses the previous month's last trading day.
         year, month = map(int, as_of_period.split("-"))
-        # Last day of the previous month relative to as_of month
-        to_dt = datetime(year, month, 1) + relativedelta(months=1) - timedelta(days=1)
+        # 修正：as_of月の前月の最終日を計算する
+        # 例：2020-04なら2020-03-31をto_dtとする
+        to_dt = datetime(year, month, 1) - timedelta(days=1)
+        # N+1ヶ月前からデータを取得（バッファを持たせる）
         from_dt = to_dt - relativedelta(months=n + 1)
     else:
         # as_of_period is YYYY-MM-DD
