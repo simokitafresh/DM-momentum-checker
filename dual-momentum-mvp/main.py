@@ -35,6 +35,7 @@ class ComputeResponse(BaseModel):
     results: List[Optional[float]]
     summary: Dict[str, Any]
     anchors: Dict[str, str]
+    prices: Optional[Dict[str, Dict[str, Optional[float]]]] = None  # 価格詳細情報を追加
 
 
 app = FastAPI(title="Dual Momentum Calculator MVP", version="1.0.0")
@@ -64,7 +65,7 @@ async def compute_momentum(request: ComputeRequest) -> ComputeResponse:
     """Compute momentum values and return them with anchors and summary."""
 
     try:
-        results, anchors = momentum.calculate(
+        results, anchors, prices = momentum.calculate(
             tickers=request.tickers,
             unit=request.unit,
             n=request.n,
@@ -79,6 +80,7 @@ async def compute_momentum(request: ComputeRequest) -> ComputeResponse:
                 "as_of_period": request.as_of_period,
             },
             anchors=anchors,
+            prices=prices,
         )
     except Exception as exc:  # pragma: no cover - defensive
         raise HTTPException(status_code=500, detail=str(exc))

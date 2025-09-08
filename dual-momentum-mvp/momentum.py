@@ -19,7 +19,7 @@ import api_client
 
 def calculate(
     tickers: List[str], unit: str, n: int, as_of_period: str
-) -> Tuple[List[Optional[float]], Dict[str, str]]:
+) -> Tuple[List[Optional[float]], Dict[str, str], Dict[str, Dict[str, Optional[float]]]]:
     """Calculate momentum values for the given tickers.
 
     Args:
@@ -31,9 +31,10 @@ def calculate(
             - week/day: YYYY-MM-DD
 
     Returns:
-        A tuple of (results, anchors):
+        A tuple of (results, anchors, prices):
             - results: List of momentums (float) or None per ticker.
             - anchors: {"current": "YYYY-MM-DD", "past": "YYYY-MM-DD"} or "N/A" when unavailable.
+            - prices: {"ticker": {"current": price, "past": price}} for each ticker.
     """
 
     # Step 1: Determine minimal fetch window
@@ -46,17 +47,23 @@ def calculate(
     current_anchor, past_anchor = find_common_anchors(price_data, unit, n, as_of_period)
 
     if not current_anchor or not past_anchor:
-        return [None] * len(tickers), {"current": "N/A", "past": "N/A"}
+        empty_prices = {ticker: {"current": None, "past": None} for ticker in tickers}
+        return [None] * len(tickers), {"current": "N/A", "past": "N/A"}, empty_prices
 
     # Step 4: Compute momentum per ticker
     results: List[Optional[float]] = []
+    prices: Dict[str, Dict[str, Optional[float]]] = {}
+    
     for ticker in tickers:
         if ticker not in price_data or not price_data[ticker]:
             results.append(None)
+            prices[ticker] = {"current": None, "past": None}
             continue
 
         current_price = find_price_on_date(price_data[ticker], current_anchor)
         past_price = find_price_on_date(price_data[ticker], past_anchor)
+        
+        prices[ticker] = {"current": current_price, "past": past_price}
 
         if current_price is not None and past_price is not None and past_price != 0:
             momentum_value = (current_price / past_price) - 1
@@ -64,7 +71,7 @@ def calculate(
         else:
             results.append(None)
 
-    return results, {"current": current_anchor, "past": past_anchor}
+    return results, {"current": current_anchor, "past": past_anchor}, prices
 
 
 def calculate_date_range(unit: str, n: int, as_of_period: str) -> Tuple[str, str]:

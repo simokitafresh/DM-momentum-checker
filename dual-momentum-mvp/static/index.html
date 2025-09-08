@@ -275,7 +275,21 @@
       for (let i = 0; i < tickers.length; i++) {
         const ticker = tickers[i];
         const result = data?.results?.[i];
+        const tickerPrices = data?.prices?.[ticker];
+        
+        // メインの結果行
         lines.push(`${ticker}: ${formatMomentum(result)}`);
+        
+        // 価格詳細情報を追加
+        if (tickerPrices && tickerPrices.current !== null && tickerPrices.past !== null) {
+          const currentPrice = Number(tickerPrices.current).toFixed(2);
+          const pastPrice = Number(tickerPrices.past).toFixed(2);
+          lines.push(`  └ 終値: ${pastPrice} → ${currentPrice}`);
+        } else if (tickerPrices) {
+          const currentPrice = tickerPrices.current !== null ? Number(tickerPrices.current).toFixed(2) : 'N/A';
+          const pastPrice = tickerPrices.past !== null ? Number(tickerPrices.past).toFixed(2) : 'N/A';
+          lines.push(`  └ 終値: ${pastPrice} → ${currentPrice} (データ不足)`);
+        }
       }
 
       lines.push('');
