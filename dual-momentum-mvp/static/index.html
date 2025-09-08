@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="ja">    <div class="row">
-      <label>Tickers (最大5個)</label>
-      <div class="tickers">ead>
+<html lang="ja">
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>デュアルモメンタム戦略チェッカー・MVP</title>
@@ -17,24 +16,19 @@
     .error { color: #c00; }
     #results { margin-top: 16px; white-space: pre-wrap; }
     .anchors { margin-top: 8px; font-size: 12px; color: #555; }
+    .notice { color: #06c; }
   </style>
   <link rel="icon" href="data:," />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- Removed legacy HTML escape helper; using textContent for output -->
-  <style>
-    /* Make Saturday auto-adjust hint noticeable */
-    .notice { color: #06c; }
-  </style>
-  <!-- no external resources to keep it single-file -->
 </head>
 <body>
   <h1>デュアルモメンタム戦略チェッカー</h1>
 
   <form id="momentum-form">
     <div class="row">
-      <label>Tickers (隴崢陞滂ｽｧ5)</label>
+      <label>Tickers (最大5個)</label>
       <div class="tickers">
         <input class="ticker-input" placeholder="AAPL" />
         <input class="ticker-input" placeholder="MSFT" />
