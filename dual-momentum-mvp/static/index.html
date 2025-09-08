@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>デュアル・モメンタム計算 MVP</title>
+  <title>郢昴・ﾎ礼ｹｧ・｢郢晢ｽｫ郢晢ｽｻ郢晢ｽ｢郢晢ｽ｡郢晢ｽｳ郢ｧ・ｿ郢晢｣ｰ髫ｪ閧ｲ・ｮ繝ｻMVP</title>
   <style>
     body { font-family: monospace; max-width: 900px; margin: 24px auto; padding: 16px; }
     h1 { font-size: 20px; }
@@ -21,12 +21,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <script>
-    // Helper to escape HTML safely
-    function esc(str) {
-      return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s]));
-    }
-  </script>
+  <!-- Removed legacy HTML escape helper; using textContent for output -->
   <style>
     /* Make Saturday auto-adjust hint noticeable */
     .notice { color: #06c; }
@@ -34,11 +29,11 @@
   <!-- no external resources to keep it single-file -->
 </head>
 <body>
-  <h1>デュアル・モメンタム計算</h1>
+  <h1>郢昴・ﾎ礼ｹｧ・｢郢晢ｽｫ郢晢ｽｻ郢晢ｽ｢郢晢ｽ｡郢晢ｽｳ郢ｧ・ｿ郢晢｣ｰ髫ｪ閧ｲ・ｮ繝ｻ/h1>
 
   <form id="momentum-form">
     <div class="row">
-      <label>Tickers (最大5)</label>
+      <label>Tickers (隴崢陞滂ｽｧ5)</label>
       <div class="tickers">
         <input class="ticker-input" placeholder="AAPL" />
         <input class="ticker-input" placeholder="MSFT" />
@@ -58,32 +53,78 @@
     </div>
 
     <div class="row">
-      <label for="n">N (期間数)</label>
+      <label for="n">N (隴帶ｻ・ｿ｣隰ｨ・ｰ)</label>
       <input id="n" type="number" min="1" value="3" />
     </div>
 
     <div class="row">
-      <label for="as_of_period">基準期</label>
+      <label for="as_of_period">陜難ｽｺ雋・戟謔・/label>
       <div>
         <input id="as_of_period" type="month" placeholder="YYYY-MM" required />
-        <div id="period-hint" class="hint">例: 2025-09</div>
+        <div id="period-hint" class="hint">關薙・ 2025-09</div>
       </div>
     </div>
 
     <div class="row">
       <div></div>
-      <button type="submit">計算</button>
+      <button type="submit">髫ｪ閧ｲ・ｮ繝ｻ/button>
     </div>
   </form>
 
   <div id="results"></div>
 
   <script>
+    // --- formatMomentum: format a decimal return as signed percentage ---
+    function formatMomentum(value) {
+      if (value === null || value === undefined) return 'N/A';
+      const num = Number(value);
+      if (!Number.isFinite(num)) return 'N/A';
+      const pct = Math.round(num * 10000) / 100; // two decimals
+      const normalized = Object.is(pct, -0) ? 0 : pct; // avoid -0
+      const sign = normalized > 0 ? '+' : (normalized < 0 ? '' : '+');
+      const absStr = Math.abs(normalized).toFixed(2);
+      return (normalized < 0) ? `-${absStr}%` : `${sign}${absStr}%`;
+    }
+
+    // --- getUnitJapanese: label for unit ---
+    function getUnitJapanese(unit, n) {
+      const unitMap = { month: '郢晢ｽｶ隴帙・, week: '鬨ｾ・ｱ鬮｢繝ｻ, day: '陜滂ｽｶ隶鯉ｽｭ隴鯉ｽ･' };
+      const label = unitMap[unit] ?? unit;
+      return `${n}${label}`;
+    }
+
     const form = document.getElementById('momentum-form');
     const unitSelect = document.getElementById('unit');
     const periodInput = document.getElementById('as_of_period');
     const periodHint = document.getElementById('period-hint');
     const resultsDiv = document.getElementById('results');
+
+    // --- displayResults: render the response in the required format ---
+    function displayResults(data, request) {
+      console.log('displayResults called with:', { data, request });
+      const lines = [];
+
+      const tickers = Array.isArray(request?.tickers) ? request.tickers : [];
+      for (let i = 0; i < tickers.length; i++) {
+        const ticker = tickers[i];
+        const result = data?.results?.[i];
+        lines.push(`${ticker}: ${formatMomentum(result)}`);
+      }
+
+      lines.push('');
+      const unitJa = getUnitJapanese(request?.unit, request?.n);
+      const past = data?.anchors?.past;
+      const current = data?.anchors?.current;
+      const hasAnchors = !!past && !!current && past !== 'N/A' && current !== 'N/A';
+      if (hasAnchors) {
+        lines.push(`隴帶ｻ・ｿ｣: ${unitJa} (${past} 遶翫・${current})`);
+      } else {
+        lines.push(`隴帶ｻ・ｿ｣: ${unitJa} (郢昴・繝ｻ郢ｧ・ｿ闕ｳ蟠趣ｽｶ・ｳ)`);
+      }
+      lines.push(`陜難ｽｺ雋・・ ${request?.as_of_period}`);
+
+      resultsDiv.textContent = lines.join('\n');
+    }
 
     // Update fields by unit
     function updateUnitUI() {
@@ -91,17 +132,17 @@
       if (unit === 'month') {
         periodInput.type = 'month';
         periodInput.placeholder = 'YYYY-MM';
-        periodHint.textContent = '例: 2025-09';
+        periodHint.textContent = '關薙・ 2025-09';
       } else if (unit === 'week') {
         periodInput.type = 'date';
-        periodInput.placeholder = 'YYYY-MM-DD (土曜)';
+        periodInput.placeholder = 'YYYY-MM-DD (陜ｨ貊灘ｱ・';
         periodInput.step = '7';
-        periodHint.textContent = '週は土曜日に丸められます';
+        periodHint.textContent = '鬨ｾ・ｱ邵ｺ・ｯ陜ｨ貊灘ｱ・ｭ鯉ｽ･邵ｺ・ｫ闕ｳ・ｸ郢ｧ竏夲ｽ臥ｹｧ蠕娯穐邵ｺ繝ｻ;
       } else { // day
         periodInput.type = 'date';
         periodInput.placeholder = 'YYYY-MM-DD';
         periodInput.step = '1';
-        periodHint.textContent = '例: 2025-09-08';
+        periodHint.textContent = '關薙・ 2025-09-08';
       }
     }
     unitSelect.addEventListener('change', updateUnitUI);
@@ -119,10 +160,10 @@
         const m = String(dt.getMonth() + 1).padStart(2, '0');
         const d = String(dt.getDate()).padStart(2, '0');
         this.value = `${y}-${m}-${d}`;
-        periodHint.textContent = '週の基準日は土曜日に自動調整されました';
+        periodHint.textContent = '鬨ｾ・ｱ邵ｺ・ｮ陜難ｽｺ雋・戟蠕狗ｸｺ・ｯ陜ｨ貊灘ｱ・ｭ鯉ｽ･邵ｺ・ｫ髢ｾ・ｪ陷肴・・ｪ・ｿ隰ｨ・ｴ邵ｺ霈費ｽ檎ｸｺ・ｾ邵ｺ蜉ｱ笳・;
         periodHint.classList.add('notice');
         setTimeout(() => {
-          periodHint.textContent = '週は土曜日に丸められます';
+          periodHint.textContent = '鬨ｾ・ｱ邵ｺ・ｯ陜ｨ貊灘ｱ・ｭ鯉ｽ･邵ｺ・ｫ闕ｳ・ｸ郢ｧ竏夲ｽ臥ｹｧ蠕娯穐邵ｺ繝ｻ;
           periodHint.classList.remove('notice');
         }, 2000);
       }
@@ -137,7 +178,7 @@
         .map(i => i.value.trim().toUpperCase())
         .filter(Boolean);
       if (tickers.length === 0) {
-        resultsDiv.innerHTML = '<span class="error">エラー: チッカーを1つ以上入力してください</span>';
+        resultsDiv.textContent = 'エラー: チッカーを1つ以上入力してください';
         return;
       }
 
@@ -147,7 +188,7 @@
 
       const payload = { tickers, unit, n, as_of_period: asOf };
 
-      resultsDiv.textContent = '計算中...';
+      resultsDiv.textContent = '髫ｪ閧ｲ・ｮ蠍ｺ・ｸ・ｭ...';
       try {
         const res = await fetch('/compute', {
           method: 'POST',
@@ -157,23 +198,14 @@
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
 
-        // Pretty render
-        const lines = [];
-        lines.push('Results:');
-        lines.push(JSON.stringify(data.results, null, 2));
-        lines.push('');
-        lines.push('Anchors:');
-        lines.push(JSON.stringify(data.anchors, null, 2));
-        lines.push('');
-        lines.push('Summary:');
-        lines.push(JSON.stringify(data.summary, null, 2));
-        resultsDiv.textContent = lines.join('\n');
-      } catch (err) {
-        console.error(err);
-        resultsDiv.innerHTML = '<span class="error">計算に失敗しました: ' + esc(err) + '</span>';
+        // Render results with helpers
+        displayResults(data, payload);
+      } catch (error) {
+        console.error(error);
+        const msg = (error && error.message) ? error.message : String(error);
+        resultsDiv.textContent = `郢ｧ・ｨ郢晢ｽｩ郢晢ｽｼ: ${msg}`;
       }
     });
   </script>
 </body>
 </html>
-
